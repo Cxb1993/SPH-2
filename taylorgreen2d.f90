@@ -60,7 +60,7 @@ program taylorgreen2d
   bc = 0
   do j=1,n(2)
      do i=1,n(1)
-        k = (j-1)*n(2) + i
+        k = (j-1)*n(1) + i
         x(1,k) = dx(1)*(i-1) + 0.5_dp*dx(1) + 0.25_dp*dx(1)*(1.d0 - cos(pi*j))
         x(2,k) = dx(2)*(j-1) + 0.5_dp*dx(2)
         u(1,k) = sin(x(1,k))*cos(x(2,k))
