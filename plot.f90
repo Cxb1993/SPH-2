@@ -1,56 +1,56 @@
-PROGRAM plot
+program plot
 
-  USE types
-  USE vars, ONLY : vars_create,vars_read,vars_write,vars_destroy,vars_params,vars_step,vars_density
-  USE vars, ONLY : x,m,rho
-  USE kernels, ONLY : kernel_select,kernel_support
-  USE grid, ONLY : grid_create,grid_destroy
-  USE mesh, ONLY : mesh_create,mesh_destroy,mesh_interp,mesh_write
-  IMPLICIT NONE
+  use types
+  use vars, only : vars_create,vars_read,vars_write,vars_destroy,vars_params,vars_step,vars_density
+  use vars, only : x,m,rho
+  use kernels, only : kernel_select,kernel_support
+  use grid, only : grid_create,grid_destroy
+  use mesh, only : mesh_create,mesh_destroy,mesh_interp,mesh_write
+  implicit none
   
-  INTEGER(I4B) :: ndim,np,i,dump,nsteps
-  REAL(DP), DIMENSION(:), ALLOCATABLE :: xmin,xmax,grav
-  INTEGER(I4B), DIMENSION(:), ALLOCATABLE :: periodic
-  REAL(DP) :: h,p0,rho0,gam,dt,simtime,cputime1,cputime2
-  CHARACTER(LEN=80) :: kernelname,dir,job
-  CHARACTER(LEN=120) :: filnam
+  integer(i4b) :: ndim,np,i,dump,nsteps
+  real(dp), dimension(:), allocatable :: xmin,xmax,grav
+  integer(i4b), dimension(:), allocatable :: periodic
+  real(dp) :: h,p0,rho0,gam,dt,simtime,cputime1,cputime2
+  character(len=80) :: kernelname,dir,job
+  character(len=120) :: filnam
   
-  OPEN(10,FILE='input')
-  READ(10,'(A)')dir
-  READ(10,'(A)')job
-  READ(10,*)ndim
-  READ(10,*)np
-  ALLOCATE(xmin(ndim),xmax(ndim),periodic(ndim),grav(ndim))
-  READ(10,*)xmin
-  READ(10,*)xmax
-  READ(10,*)periodic
-  READ(10,*)h
-  READ(10,'(A)')kernelname
-  READ(10,*)rho0
-  READ(10,*)gam
-  READ(10,*)p0
-  READ(10,*)grav
-  READ(10,*)dt
-  READ(10,*)nsteps
-  READ(10,*)dump
-  READ(10,*)simtime
-  CLOSE(10)
+  open(10,file='input')
+  read(10,'(a)')dir
+  read(10,'(a)')job
+  read(10,*)ndim
+  read(10,*)np
+  allocate(xmin(ndim),xmax(ndim),periodic(ndim),grav(ndim))
+  read(10,*)xmin
+  read(10,*)xmax
+  read(10,*)periodic
+  read(10,*)h
+  read(10,'(a)')kernelname
+  read(10,*)rho0
+  read(10,*)gam
+  read(10,*)p0
+  read(10,*)grav
+  read(10,*)dt
+  read(10,*)nsteps
+  read(10,*)dump
+  read(10,*)simtime
+  close(10)
   
-  DO i=0,dump
-     WRITE(filnam,'(4A,I3.3)')TRIM(dir),TRIM(job),'/',TRIM(job),i
-     PRINT '(A)',TRIM(filnam)
-     CALL vars_create(ndim,np)
-     CALL vars_read(TRIM(filnam))
-     CALL vars_params(h,gam,rho0,p0,grav)
-     CALL kernel_select(kernelname)
-     CALL grid_create(xmin,xmax,kernel_support(h),periodic)
-     CALL mesh_create(h,xmin,xmax)
-     CALL mesh_interp(x,m,rho,rho)
-     CALL mesh_write(filnam)
-     CALL mesh_destroy
-     CALL grid_destroy
-     CALL vars_destroy
-  END DO
-  DEALLOCATE(xmin,xmax,periodic,grav)
+  do i=0,dump
+     write(filnam,'(4a,i3.3)')trim(dir),trim(job),'/',trim(job),i
+     print '(a)',trim(filnam)
+     call vars_create(ndim,np)
+     call vars_read(trim(filnam))
+     call vars_params(h,gam,rho0,p0,grav)
+     call kernel_select(kernelname)
+     call grid_create(xmin,xmax,kernel_support(h),periodic)
+     call mesh_create(h,xmin,xmax)
+     call mesh_interp(x,m,rho,rho)
+     call mesh_write(filnam)
+     call mesh_destroy
+     call grid_destroy
+     call vars_destroy
+  end do
+  deallocate(xmin,xmax,periodic,grav)
   
-END PROGRAM plot
+end program plot

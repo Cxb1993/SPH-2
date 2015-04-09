@@ -1,82 +1,82 @@
-PROGRAM grid2d
+program grid2d
 
-  USE types
-  USE vars, ONLY : vars_create,vars_destroy,vars_write,vars_params,vars_density,vars_pressure,x,u,m,rho,p,mu,bc
-  USE grid, ONLY : grid_create,grid_destroy
-  USE kernels, ONLY : kernel_select,kernel_support
-  IMPLICIT NONE
+  use types
+  use vars, only : vars_create,vars_destroy,vars_write,vars_params,vars_density,vars_pressure,x,u,m,rho,p,mu,bc
+  use grid, only : grid_create,grid_destroy
+  use kernels, only : kernel_select,kernel_support
+  implicit none
   
-  INTEGER(I4B), PARAMETER :: ndim = 2
-  INTEGER(I4B), DIMENSION(ndim), PARAMETER :: n = (/ 20, 20 /)
-  REAL(DP), DIMENSION(ndim), PARAMETER :: xmin=(/ 0.0_dp, 0.0_dp /), xmax=(/ 2.0_dp*PI, 2.0_dp*PI /)
-  REAL(DP), DIMENSION(ndim), PARAMETER :: grav=(/ 0.0_dp, 0.0_dp /) 
-  INTEGER(I4B), DIMENSION(ndim), PARAMETER :: periodic = (/ 1, 1 /)
-  REAL(DP), PARAMETER :: h = 1.2_dp*0.05_dp*2.0_dp*PI, rho0 = 1.0_dp, gam = 7.0_dp
-  REAL(DP), PARAMETER :: cs = 10.0_dp, p0 = rho0*cs**2/gam, mu0 = 0.1D0
-  CHARACTER(LEN=80) :: kernelname = 'm4',dir = '/mnt/disk2/tmattner/SPH/',job = 'taylorgreen2d'
-  CHARACTER(LEN=120) :: filnam
-  INTEGER(I4B) :: nsteps=100
+  integer(i4b), parameter :: ndim = 2
+  integer(i4b), dimension(ndim), parameter :: n = (/ 100, 100 /)
+  real(dp), dimension(ndim), parameter :: xmin=(/ 0.0_dp, 0.0_dp /), xmax=(/ 2.0_dp*pi, 2.0_dp*pi /)
+  real(dp), dimension(ndim), parameter :: grav=(/ 0.0_dp, 0.0_dp /) 
+  integer(i4b), dimension(ndim), parameter :: periodic = (/ 1, 1 /)
+  real(dp), parameter :: h = 1.2_dp*0.01_dp*2.0_dp*pi, rho0 = 1.0_dp, gam = 7.0_dp
+  real(dp), parameter :: cs = 10.0_dp, p0 = rho0*cs**2/gam, mu0 = 0.01d0
+  character(len=80) :: kernelname = 'm4',dir = '/mnt/disk2/tmattner/SPH/',job = 'taylorgreen2d'
+  character(len=120) :: filnam
+  integer(i4b) :: nsteps=100
  
-  INTEGER(I4B) :: i,j,k,np
-  REAL(DP) :: dx(ndim),dt,r,x0,x1
+  integer(i4b) :: i,j,k,np
+  real(dp) :: dx(ndim),dt,r,x0,x1
   
   np = n(1)*n(2)
   dx = (xmax - xmin)/n
-  dt = MIN(0.1_dp*MINVAL(dx)/cs,0.1_dp*MINVAL(dx)**2*rho0/mu0)
+  dt = min(0.1_dp*minval(dx)/cs,0.1_dp*minval(dx)**2*rho0/mu0)
 
-  OPEN(10,FILE='input')
-  WRITE(10,'(A)')TRIM(dir)
-  WRITE(10,'(A)')TRIM(job)
-  WRITE(10,*)ndim
-  WRITE(10,*)np
-  WRITE(10,*)xmin
-  WRITE(10,*)xmax
-  WRITE(10,*)periodic
-  WRITE(10,*)h
-  WRITE(10,'(A)')TRIM(kernelname)
-  WRITE(10,*)rho0
-  WRITE(10,*)gam
-  WRITE(10,*)p0
-  WRITE(10,*)grav
-  WRITE(10,*)dt
-  WRITE(10,*)nsteps
-  WRITE(10,*)0
-  WRITE(10,*)0.0_dp
-  CLOSE(10)
+  open(10,file='input')
+  write(10,'(a)')trim(dir)
+  write(10,'(a)')trim(job)
+  write(10,*)ndim
+  write(10,*)np
+  write(10,*)xmin
+  write(10,*)xmax
+  write(10,*)periodic
+  write(10,*)h
+  write(10,'(a)')trim(kernelname)
+  write(10,*)rho0
+  write(10,*)gam
+  write(10,*)p0
+  write(10,*)grav
+  write(10,*)dt
+  write(10,*)nsteps
+  write(10,*)0
+  write(10,*)0.0_dp
+  close(10)
 
-  WRITE(filnam,'(3A,I3.3)')'mkdir ',TRIM(dir),TRIM(job)
-  CALL SYSTEM(TRIM(filnam))
+  write(filnam,'(3a,i3.3)')'mkdir ',trim(dir),trim(job)
+  call system(trim(filnam))
  
-  CALL vars_create(ndim,np)
+  call vars_create(ndim,np)
 
   u = 0.0_dp
   bc = 0
-  DO j=1,n(2)
-     DO i=1,n(1)
+  do j=1,n(2)
+     do i=1,n(1)
         k = (j-1)*n(2) + i
-        x(1,k) = dx(1)*(i-1) + 0.5_dp*dx(1)  + 0.25_dp*dx(1)*(1.D0 - cos(PI*j))
+        x(1,k) = dx(1)*(i-1) + 0.5_dp*dx(1)  + 0.25_dp*dx(1)*(1.d0 - cos(pi*j))
         x(2,k) = dx(2)*(j-1) + 0.5_dp*dx(2)
         u(1,k) = sin(x(1,k))*cos(x(2,k))
         u(2,k) = -cos(x(1,k))*sin(x(2,k))
-     END DO
-  END DO 
+     end do
+  end do 
 
-  CALL vars_params(h,gam,rho0,p0,grav)
-  CALL kernel_select(kernelname)
-  CALL grid_create(xmin,xmax,kernel_support(h),periodic)
+  call vars_params(h,gam,rho0,p0,grav)
+  call kernel_select(kernelname)
+  call grid_create(xmin,xmax,kernel_support(h),periodic)
   m = 1.0_dp
-  CALL vars_density
-  r = SUM(rho)/np ! average density for m = 1
+  call vars_density
+  r = sum(rho)/np ! average density for m = 1
   m = rho0/r      ! average density = rho0
   rho = rho/r     ! density equation is linear
-  CALL vars_pressure
+  call vars_pressure
   mu = mu0
 
   
-  WRITE(filnam,'(4A,I3.3)')TRIM(dir),TRIM(job),'/',TRIM(job),0
-  CALL vars_write(TRIM(filnam))
-  CALL grid_destroy
-  CALL vars_destroy
+  write(filnam,'(4a,i3.3)')trim(dir),trim(job),'/',trim(job),0
+  call vars_write(trim(filnam))
+  call grid_destroy
+  call vars_destroy
   
   
-END PROGRAM grid2d
+end program grid2d

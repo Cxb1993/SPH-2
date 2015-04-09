@@ -13,7 +13,7 @@ OBJS = types.o vectors.o kernels.o grid.o mesh.o vars.o
 # Conditionals
 
 FF = gfortran
-FCOMPILEFLAGS = -Ofast #-fopenmp #-floop-parallelize-all -ftree-parallelize-loops=4
+FCOMPILEFLAGS = -Ofast -fopenmp #-floop-parallelize-all -ftree-parallelize-loops=4
 LD = $(FF)
 LINKFLAGS = $(FCOMPILEFLAGS)
 LIBS = tecio64.a -lstdc++
@@ -40,6 +40,9 @@ couette2d: $(OBJS) couette2d.o $(MAKEFILE)
 	
 taylorgreen2d: $(OBJS) taylorgreen2d.o $(MAKEFILE)
 	$(LINK) -o taylorgreen2d $(OBJS) taylorgreen2d.o $(LIBS)
+	
+taylorgreen3d: $(OBJS) taylorgreen3d.o $(MAKEFILE)
+	$(LINK) -o taylorgreen3d $(OBJS) taylorgreen3d.o $(LIBS)
 
 shear2d: $(OBJS) shear2d.o $(MAKEFILE)
 	$(LINK) -o shear $(OBJS) shear2d.o $(LIBS)
@@ -69,6 +72,7 @@ clean:
 	-rm couette
 	-rm spindown2d
 	-rm taylorgreen2d
+	-rm taylorgreen3d
 	-rm shear
 	-rm dam
 	-rm weir3d
@@ -102,6 +106,8 @@ grid2d.o: types.f90 kernels.f90 vars.f90 grid.f90 grid2d.f90
 couette2d.o: types.f90 kernels.f90 vars.f90 grid.f90 couette2d.f90
 
 taylorgreen2d.o: types.f90 kernels.f90 vars.f90 grid.f90 taylorgreen2d.f90
+
+taylorgreen3d.o: types.f90 kernels.f90 vars.f90 grid.f90 taylorgreen3d.f90
 
 shear2d.o: types.f90 kernels.f90 vars.f90 grid.f90 shear2d.f90
 

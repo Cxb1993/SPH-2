@@ -1,431 +1,431 @@
-MODULE kernels
+module kernels
 
-  USE types
-  IMPLICIT NONE
+  use types
+  implicit none
   
-  INTERFACE kernel_eval
-    MODULE PROCEDURE w
-  END INTERFACE
+  interface kernel_eval
+    module procedure w
+  end interface
 
-  REAL(DP), DIMENSION(3), PARAMETER :: a0 = (/ 1.0_dp/sqrtpi_d, 1.0_dp/pi_d, 1.0_dp/pi_d/sqrtpi_d /)
-  REAL(DP), DIMENSION(3), PARAMETER :: a4 = (/ 1.0_dp, 15.0_dp/7.0_dp/pi_d, 1.5_dp/pi_d /)
-  REAL(DP), DIMENSION(3), PARAMETER :: a5 = (/ 1.0_dp/24.0_dp, 96.0_dp/1199.0_dp/pi_d, 0.05_dp/pi_d /) 
-  REAL(DP), DIMENSION(3), PARAMETER :: a6 = (/ 1.0_dp/120.0_dp, 7.0_dp/478.0_dp/pi_d, 1.0_dp/120.0_dp/pi_d /)
-  REAL(DP), PARAMETER :: supp0 = 6.0_dp, supp4 = 2.0_dp, supp5 = 2.5_dp, supp6 = 3.0_dp
+  real(dp), dimension(3), parameter :: a0 = (/ 1.0_dp/sqrtpi_d, 1.0_dp/pi_d, 1.0_dp/pi_d/sqrtpi_d /)
+  real(dp), dimension(3), parameter :: a4 = (/ 1.0_dp, 15.0_dp/7.0_dp/pi_d, 1.5_dp/pi_d /)
+  real(dp), dimension(3), parameter :: a5 = (/ 1.0_dp/24.0_dp, 96.0_dp/1199.0_dp/pi_d, 0.05_dp/pi_d /) 
+  real(dp), dimension(3), parameter :: a6 = (/ 1.0_dp/120.0_dp, 7.0_dp/478.0_dp/pi_d, 1.0_dp/120.0_dp/pi_d /)
+  real(dp), parameter :: supp0 = 6.0_dp, supp4 = 2.0_dp, supp5 = 2.5_dp, supp6 = 3.0_dp
 
-  CHARACTER(LEN=80) :: kernelname
-  REAL(DP), DIMENSION(3) :: alpha
-  REAL(DP) :: support
+  character(len=80)      :: kernelname
+  real(dp), dimension(3) :: alpha
+  real(dp)               :: support
 
-CONTAINS
+contains
 
-  SUBROUTINE kernel_select(kernel)
+  subroutine kernel_select(kernel)
    
-    CHARACTER(*) :: kernel
+    character(*) :: kernel
 
     kernelname = kernel
-    SELECT CASE(TRIM(kernelname))
-    CASE('gaussian')
+    select case(trim(kernelname))
+    case('gaussian')
        alpha = a0
        support = supp0
-    CASE('m4')
+    case('m4')
        alpha = a4
        support = supp4
-    CASE('m5')
+    case('m5')
        alpha = a5
        support = supp5
-    CASE('m6')
+    case('m6')
        alpha = a6
        support = supp6
-    CASE DEFAULT
+    case default
        alpha = a4
        support = supp4
-    END SELECT
+    end select
 
-  END SUBROUTINE kernel_select
+  end subroutine kernel_select
   
-  FUNCTION kernel_support(h)
+  function kernel_support(h)
   
-    REAL(DP), INTENT(IN) :: h
-    REAL(DP) :: kernel_support
+    real(dp), intent(in) :: h
+    real(dp) :: kernel_support
   
     kernel_support = support*h
     
-  END FUNCTION kernel_support
+  end function kernel_support
 
-  FUNCTION f(x,h)
+  function f(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: f
+    real(dp), intent(in) :: x, h
+    real(dp)             :: f
 
-    SELECT CASE(TRIM(kernelname))
-    CASE('gaussian')
+    select case(trim(kernelname))
+    case('gaussian')
        f = m0(x,h)
-    CASE('m4')
+    case('m4')
        f = m4(x,h)
-    CASE('m5')
+    case('m5')
        f = m5(x,h)
-    CASE('m6')
+    case('m6')
        f = m6(x,h)
-    CASE DEFAULT
+    case default
        f = m4(x,h)
-    END SELECT  
+    end select  
 
-  END FUNCTION f
+  end function f
 
- FUNCTION df(x,h)
+ function df(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: df
+    real(dp), intent(in) :: x, h
+    real(dp)             :: df
 
-    SELECT CASE(TRIM(kernelname))
-    CASE('gaussian')
+    select case(trim(kernelname))
+    case('gaussian')
        df = dm0(x,h)
-    CASE('m4')
+    case('m4')
        df = dm4(x,h)
-    CASE('m5')
+    case('m5')
        df = dm5(x,h)
-    CASE('m6')
+    case('m6')
        df = dm6(x,h)
-    CASE DEFAULT
+    case default
        df = dm4(x,h)
-    END SELECT  
+    end select  
 
-  END FUNCTION df
+  end function df
 
- FUNCTION d2f(x,h)
+ function d2f(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: d2f
+    real(dp), intent(in) :: x, h
+    real(dp)             :: d2f
 
-    SELECT CASE(TRIM(kernelname))
-    CASE('gaussian')
+    select case(trim(kernelname))
+    case('gaussian')
        d2f = d2m0(x,h)
-    CASE('m4')
+    case('m4')
        d2f = d2m4(x,h)
-    CASE('m5')
+    case('m5')
        d2f = d2m5(x,h)
-    CASE('m6')
+    case('m6')
        d2f = d2m6(x,h)
-    CASE DEFAULT
+    case default
        d2f = d2m4(x,h)
-    END SELECT  
+    end select  
 
-  END FUNCTION d2f
+  end function d2f
 
-  FUNCTION w(x,h)
+  function w(x, h)
 
-    REAL(DP), DIMENSION(:), INTENT(IN) :: x
-    REAL(DP), INTENT(IN) :: h
-    REAL(DP) :: w
+    real(dp), dimension(:), intent(in) :: x
+    real(dp), intent(in)               :: h
+    real(dp)                           :: w
 
-    INTEGER(I4B) :: ndim
-    REAL(DP) :: r
+    integer(i4b) :: ndim
+    real(dp)     :: r
 
-    ndim = SIZE(x,1)
-    r = SQRT(SUM(x**2))
+    ndim = size(x,1)
+    r = sqrt(sum(x**2))
     w = f(r,h)*alpha(ndim)/h**ndim
 
-  END FUNCTION w
+  end function w
 
-  FUNCTION dw(i,x,h)
+  function dw(i, x, h)
 
-    INTEGER(I4B), INTENT(IN) :: i
-    REAL(DP), DIMENSION(:), INTENT(IN) :: x
-    REAL(DP), INTENT(IN) :: h
-    REAL(DP) :: dw
+    integer(i4b), intent(in)           :: i
+    real(dp), dimension(:), intent(in) :: x
+    real(dp), intent(in)               :: h
+    real(dp)                           :: dw
 
-    INTEGER(I4B) :: ndim
-    REAL(DP) :: r
+    integer(i4b) :: ndim
+    real(dp)     :: r
 
-    ndim = SIZE(x,1)
-    r = SQRT(SUM(x**2))
-    IF (r /= 0.0_dp) THEN
+    ndim = size(x,1)
+    r = sqrt(sum(x**2))
+    if (r /= 0.0_dp) then
        dw = x(i)/r*df(r,h)*alpha(ndim)/h**ndim
-    ELSE
+    else
        dw = 0.0_dp
-    END IF
+    end if
 
-  END FUNCTION dw
+  end function dw
   
-  FUNCTION kernel_grad(x,h) RESULT(grad)
+  function kernel_grad(x, h) result(grad)
   
-    REAL(DP), DIMENSION(:), INTENT(IN) :: x
-    REAL(DP), INTENT(IN) :: h
-    REAL(DP), DIMENSION(SIZE(x,1)) :: grad
+    real(dp), dimension(:), intent(in) :: x
+    real(dp), intent(in)               :: h
+    real(dp), dimension(size(x,1))     :: grad
 
-    INTEGER(I4B) :: ndim
-    REAL(DP) :: r
+    integer(i4b) :: ndim
+    real(dp)     :: r
 
-    ndim = SIZE(x,1)
-    r = SQRT(SUM(x**2))
-    IF (r /= 0.0_dp) THEN
+    ndim = size(x,1)
+    r = sqrt(sum(x**2))
+    if (r /= 0.0_dp) then
        grad = 1.0_dp/r*df(r,h)*alpha(ndim)/h**ndim*x
-    ELSE
+    else
        grad = 0.0_dp
-    END IF
+    end if
 
-  END FUNCTION kernel_grad
+  end function kernel_grad
 
-  FUNCTION d2w(i,j,x,h)
+  function d2w(i, j, x, h)
 
-    INTEGER(I4B), INTENT(IN) :: i,j
-    REAL(DP), DIMENSION(:), INTENT(IN) :: x
-    REAL(DP), INTENT(IN) :: h
-    REAL(DP) :: d2w
+    integer(i4b), intent(in)           :: i, j
+    real(dp), dimension(:), intent(in) :: x
+    real(dp), intent(in)               :: h
+    real(dp)                           :: d2w
 
-    REAL(DP), PARAMETER :: tol = 1.D-14
-    INTEGER(I4B) :: ndim
-    REAL(DP) :: r,tmp,a
+    real(dp), parameter :: tol = 1.d-14
+    integer(i4b)        :: ndim
+    real(dp)            :: r, tmp, a
 
-    ndim = SIZE(x,1)
-    r = SQRT(SUM(x**2))
+    ndim = size(x,1)
+    r = sqrt(sum(x**2))
     a = alpha(ndim)/h**ndim
-    IF (r >= tol) THEN
+    if (r >= tol) then
        tmp = a*df(r,h)/r
-       IF (i == j) THEN
+       if (i == j) then
           d2w = tmp
-       ELSE
+       else
           d2w = 0.0_dp
-       END IF
+       end if
        d2w = d2w + x(i)*x(j)/r**2*(a*d2f(r,h) - tmp)
-    ELSE
-       IF (i == j) THEN
+    else
+       if (i == j) then
           d2w = a*d2f(r,h)
-       ELSE
+       else
           d2w = 0.0_dp
-       END IF
-    END IF
+       end if
+    end if
 
-  END FUNCTION d2w
+  end function d2w
 
-  FUNCTION m4(x,h)
+  function m4(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: m4
+    real(dp), intent(in) :: x, h
+    real(dp)             :: m4
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(q))
+    case(0)
        m4 = ((2.0_dp - q)**3 - 4.0_dp*(1.0_dp - q)**3)/6.0_dp
-    CASE(1)
+    case(1)
        m4 = ((2.0_dp - q)**3)/6.0_dp
-    CASE DEFAULT
+    case default
        m4 = 0.0_dp
-    END SELECT
+    end select
 
-  END FUNCTION m4
+  end function m4
 
-  FUNCTION dm4(x,h)
+  function dm4(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: dm4
+    real(dp), intent(in) :: x, h
+    real(dp)             :: dm4
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(q))
+    case(0)
        dm4 = (-3.0_dp*(2.0_dp - q)**2 + 12.0_dp*(1.0_dp - q)**2)/6.0_dp
-    CASE(1)
+    case(1)
        dm4 = (-3.0_dp*(2.0_dp - q)**2)/6.0_dp
-    CASE DEFAULT
+    case default
        dm4 = 0.0_dp
-    END SELECT
-    dm4 = dm4*SIGN(1.0_dp/h,x)
+    end select
+    dm4 = dm4*sign(1.0_dp/h, x)
 
-  END FUNCTION dm4
+  end function dm4
 
-  FUNCTION d2m4(x,h)
+  function d2m4(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: d2m4
+    real(dp), intent(in) :: x, h
+    real(dp)             :: d2m4
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(q))
+    case(0)
        d2m4 = (6.0_dp*(2.0_dp - q) - 24.0_dp*(1.0_dp - q))/6.0_dp
-    CASE(1)
+    case(1)
        d2m4 = (6.0_dp*(2.0_dp - q))/6.0_dp
-    CASE DEFAULT
+    case default
        d2m4 = 0.0_dp
-    END SELECT
+    end select
     d2m4 = d2m4/h**2
 
-  END FUNCTION d2m4
+  end function d2m4
 
-  FUNCTION m5(x,h)
+  function m5(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: m5
+    real(dp), intent(in) :: x, h
+    real(dp)             :: m5
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(2.0_dp*q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(2.0_dp*q))
+    case(0)
        m5 = ((2.5_dp - q)**4 - 5.0_dp*(1.5_dp - q)**4 &
             + 10.0_dp*(0.5_dp - q)**4)
-    CASE(1:2)
+    case(1:2)
        m5 = ((2.5_dp - q)**4 - 5.0_dp*(1.5_dp - q)**4)
-    CASE(3:4)
+    case(3:4)
        m5 = ((2.5_dp - q)**4)
-    CASE DEFAULT
+    case default
        m5 = 0.0_dp
-    END SELECT
+    end select
 
-  END FUNCTION m5
+  end function m5
 
-  FUNCTION dm5(x,h)
+  function dm5(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: dm5
+    real(dp), intent(in) :: x, h
+    real(dp)             :: dm5
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(2.0_dp*q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(2.0_dp*q))
+    case(0)
        dm5 = (-4.0_dp*(2.5_dp - q)**3 + 20.0_dp*(1.5_dp - q)**3 &
             - 40.0_dp*(0.5_dp - q)**3)
-    CASE(1:2)
+    case(1:2)
        dm5 = (-4.0_dp*(2.5_dp - q)**3 + 20.0_dp*(1.5_dp - q)**3)
-    CASE(3:4)
+    case(3:4)
        dm5 = (-4.0_dp*(2.5_dp - q)**3)
-    CASE DEFAULT
+    case default
        dm5 = 0.0_dp
-    END SELECT
-    dm5 = dm5*SIGN(1.0_dp/h,x)
+    end select
+    dm5 = dm5*sign(1.0_dp/h, x)
 
-  END FUNCTION dm5
+  end function dm5
 
-  FUNCTION d2m5(x,h)
+  function d2m5(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: d2m5
+    real(dp), intent(in) :: x, h
+    real(dp)             :: d2m5
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(2.0_dp*q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(2.0_dp*q))
+    case(0)
        d2m5 = (12.0_dp*(2.5_dp - q)**2 - 60.0_dp*(1.5_dp - q)**2 &
             + 120.0_dp*(0.5_dp - q)**2)
-    CASE(1:2)
+    case(1:2)
        d2m5 = (12.0_dp*(2.5_dp - q)**2 - 60.0_dp*(1.5_dp - q)**2)
-    CASE(3:4)
+    case(3:4)
        d2m5 = (12.0_dp*(2.5_dp - q)**2)
-    CASE DEFAULT
+    case default
        d2m5 = 0.0_dp
-    END SELECT
+    end select
     d2m5 = d2m5/h**2
 
-  END FUNCTION d2m5
+  end function d2m5
 
-  FUNCTION m6(x,h)
+  function m6(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: m6
+    real(dp), intent(in) :: x, h
+    real(dp)             :: m6
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(q))
+    case(0)
        m6 = (3.0_dp - q)**5 - 6.0_dp*(2.0_dp - q)**5 + 15.0_dp*(1.0_dp - q)**5
-    CASE(1)
+    case(1)
        m6 = (3.0_dp - q)**5 - 6.0_dp*(2.0_dp - q)**5
-    CASE(2)
+    case(2)
        m6 = (3.0_dp - q)**5
-    CASE DEFAULT
+    case default
        m6 = 0.0_dp
-    END SELECT
+    end select
 
-  END FUNCTION m6
+  end function m6
 
-  FUNCTION dm6(x,h)
+  function dm6(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: dm6
+    real(dp), intent(in) :: x, h
+    real(dp)             :: dm6
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(q))
+    case(0)
        dm6 = -5.0_dp*(3.0_dp - q)**4 + 30.0_dp*(2.0_dp - q)**4 - 75.0_dp*(1.0_dp - q)**4
-    CASE(1)
+    case(1)
        dm6 = -5.0_dp*(3.0_dp - q)**4 + 30.0_dp*(2.0_dp - q)**4
-    CASE(2)
+    case(2)
        dm6 = -5.0_dp*(3.0_dp - q)**4
-    CASE DEFAULT
+    case default
        dm6 = 0.0_dp
-    END SELECT
-    dm6 = dm6*SIGN(1.0_dp/h,x)
+    end select
+    dm6 = dm6*sign(1.0_dp/h, x)
 
-  END FUNCTION dm6
+  end function dm6
 
-  FUNCTION d2m6(x,h)
+  function d2m6(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: d2m6
+    real(dp), intent(in) :: x, h
+    real(dp)             :: d2m6
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    SELECT CASE(INT(q))
-    CASE(0)
+    q = abs(x)/h
+    select case(int(q))
+    case(0)
        d2m6 = 20.0_dp*(3.0_dp - q)**3 - 120.0_dp*(2.0_dp - q)**3 + 300.0_dp*(1.0_dp - q)**3
-    CASE(1)
+    case(1)
        d2m6 = 20.0_dp*(3.0_dp - q)**3 - 120.0_dp*(2.0_dp - q)**3
-    CASE(2)
+    case(2)
        d2m6 = 20.0_dp*(3.0_dp - q)**3
-    CASE DEFAULT
+    case default
        d2m6 = 0.0_dp
-    END SELECT
+    end select
     d2m6 = d2m6/h**2
 
-  END FUNCTION d2m6
+  end function d2m6
 
-  FUNCTION m0(x,h)
+  function m0(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: m0
+    real(dp), intent(in) :: x, h
+    real(dp)             :: m0
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    m0 = EXP(-q**2)
+    q = abs(x)/h
+    m0 = exp(-q**2)
 
-  END FUNCTION m0
+  end function m0
 
-  FUNCTION dm0(x,h)
+  function dm0(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: dm0
+    real(dp), intent(in) :: x, h
+    real(dp)             :: dm0
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    dm0 = -2.0_dp*q*EXP(-q**2)
-    dm0 = dm0*SIGN(1.0_dp/h,x)
+    q = abs(x)/h
+    dm0 = -2.0_dp*q*exp(-q**2)
+    dm0 = dm0*sign(1.0_dp/h, x)
 
-  END FUNCTION dm0
+  end function dm0
 
-  FUNCTION d2m0(x,h)
+  function d2m0(x, h)
 
-    REAL(DP), INTENT(IN) :: x,h
-    REAL(DP) :: d2m0
+    real(dp), intent(in) :: x, h
+    real(dp)             :: d2m0
 
-    REAL(DP) :: q
+    real(dp) :: q
 
-    q = ABS(x)/h
-    d2m0 = (4.0_dp*q**2 - 2.0_dp)*EXP(-q**2)/h**2
+    q = abs(x)/h
+    d2m0 = (4.0_dp*q**2 - 2.0_dp)*exp(-q**2)/h**2
 
-  END FUNCTION d2m0
+  end function d2m0
     
-END MODULE kernels
+end module kernels

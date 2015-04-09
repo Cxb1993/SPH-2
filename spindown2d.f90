@@ -1,107 +1,107 @@
-PROGRAM grid2d
+program grid2d
 
-  USE types
-  USE vars, ONLY : vars_create,vars_destroy,vars_write,vars_params,vars_density,vars_pressure,x,u,m,rho,p,mu,bc
-  USE grid, ONLY : grid_create,grid_destroy
-  USE kernels, ONLY : kernel_select,kernel_support
-  IMPLICIT NONE
+  use types
+  use vars, only : vars_create,vars_destroy,vars_write,vars_params,vars_density,vars_pressure,x,u,m,rho,p,mu,bc
+  use grid, only : grid_create,grid_destroy
+  use kernels, only : kernel_select,kernel_support
+  implicit none
   
-  INTEGER(I4B), PARAMETER :: ndim = 2
-  INTEGER(I4B), PARAMETER :: n = 20
-  REAL(DP), DIMENSION(ndim), PARAMETER :: xmin=(/ 0.0_dp, 0.0_dp /), xmax=(/ 1.0_dp, 1.0_dp /)
-  REAL(DP), DIMENSION(ndim), PARAMETER :: grav=(/ 0.0_dp, 0.0_dp /) 
-  INTEGER(I4B), DIMENSION(ndim), PARAMETER :: periodic = (/ 0, 0 /)
-  REAL(DP), PARAMETER :: dr = 0.49_dp/(n-1)
-  REAL(DP), PARAMETER :: h = 1.3_dp*dr, rho0 = 1.0_dp, gam = 7.0_dp
-  REAL(DP), PARAMETER :: cs = 10.0_dp, p0 = rho0*cs**2/gam, mu0 = 0.1_dp
-  CHARACTER(LEN=80) :: kernelname = 'm4',dir = '/mnt/disk2/tmattner/SPH/',job = 'spindown2d'
-  CHARACTER(LEN=120) :: filnam
-  INTEGER(I4B) :: nsteps=100
+  integer(i4b), parameter :: ndim = 2
+  integer(i4b), parameter :: n = 20
+  real(dp), dimension(ndim), parameter :: xmin=(/ 0.0_dp, 0.0_dp /), xmax=(/ 1.0_dp, 1.0_dp /)
+  real(dp), dimension(ndim), parameter :: grav=(/ 0.0_dp, 0.0_dp /) 
+  integer(i4b), dimension(ndim), parameter :: periodic = (/ 0, 0 /)
+  real(dp), parameter :: dr = 0.49_dp/(n-1)
+  real(dp), parameter :: h = 1.3_dp*dr, rho0 = 1.0_dp, gam = 7.0_dp
+  real(dp), parameter :: cs = 10.0_dp, p0 = rho0*cs**2/gam, mu0 = 0.1_dp
+  character(len=80) :: kernelname = 'm4',dir = '/mnt/disk2/tmattner/sph/',job = 'spindown2d'
+  character(len=120) :: filnam
+  integer(i4b) :: nsteps=100
  
-  INTEGER(I4B) :: i,j,k,np,ntheta
-  REAL(DP) :: dtheta,theta,dt,r,x0,x1
+  integer(i4b) :: i,j,k,np,ntheta
+  real(dp) :: dtheta,theta,dt,r,x0,x1
 
-! Calculate number of particles
+! calculate number of particles
 
   np = 1
-  DO i=2,n
-     np = np + INT(2.0_dp*pi_d*(i-1))
-  END DO
-  dt = MIN(0.1_dp*dr/cs,0.1_dp*dr**2*rho0/mu0)
+  do i=2,n
+     np = np + int(2.0_dp*pi_d*(i-1))
+  end do
+  dt = min(0.1_dp*dr/cs,0.1_dp*dr**2*rho0/mu0)
 
-  OPEN(10,FILE='input')
-  WRITE(10,'(A)')TRIM(dir)
-  WRITE(10,'(A)')TRIM(job)
-  WRITE(10,*)ndim
-  WRITE(10,*)np
-  WRITE(10,*)xmin
-  WRITE(10,*)xmax
-  WRITE(10,*)periodic
-  WRITE(10,*)h
-  WRITE(10,'(A)')TRIM(kernelname)
-  WRITE(10,*)rho0
-  WRITE(10,*)gam
-  WRITE(10,*)p0
-  WRITE(10,*)grav
-  WRITE(10,*)dt
-  WRITE(10,*)nsteps
-  WRITE(10,*)0
-  WRITE(10,*)0.0_dp
-  CLOSE(10)
+  open(10,file='input')
+  write(10,'(a)')trim(dir)
+  write(10,'(a)')trim(job)
+  write(10,*)ndim
+  write(10,*)np
+  write(10,*)xmin
+  write(10,*)xmax
+  write(10,*)periodic
+  write(10,*)h
+  write(10,'(a)')trim(kernelname)
+  write(10,*)rho0
+  write(10,*)gam
+  write(10,*)p0
+  write(10,*)grav
+  write(10,*)dt
+  write(10,*)nsteps
+  write(10,*)0
+  write(10,*)0.0_dp
+  close(10)
 
-  WRITE(filnam,'(3A,I3.3)')'mkdir ',TRIM(dir),TRIM(job)
-  CALL SYSTEM(TRIM(filnam))
+  write(filnam,'(3a,i3.3)')'mkdir ',trim(dir),trim(job)
+  call system(trim(filnam))
  
-  CALL vars_create(ndim,np)
+  call vars_create(ndim,np)
 
   u = 0.0_dp
   bc = 0
   k = 0
 
-  DO i=1,n
-     IF (i == 1) THEN
+  do i=1,n
+     if (i == 1) then
         k = k + 1
         x(1,k) = 0.5_dp
         x(2,k) = 0.5_dp
         u(1,k) = 0.0_dp
         u(2,k) = 0.0_dp
-     ELSE
+     else
         r = dr*(i-1)
-        ntheta = INT(2.0_dp*pi_d*(i-1))
+        ntheta = int(2.0_dp*pi_d*(i-1))
         dtheta = 2.0_dp*pi_d/ntheta
-        DO j=1,ntheta
+        do j=1,ntheta
            k = k + 1
            theta = j*dtheta
-           x(1,k) = r*COS(theta) + 0.5_dp
-           x(2,k) = r*SIN(theta) + 0.5_dp
-           IF (i > n-3) THEN
+           x(1,k) = r*cos(theta) + 0.5_dp
+           x(2,k) = r*sin(theta) + 0.5_dp
+           if (i > n-3) then
               u(1,k) = 0.0_dp
               u(2,k) = 0.0_dp
               bc(k) = 1
-           ELSE
-              u(1,k) = -r*SIN(theta)
-              u(2,k) = r*COS(theta)
-           END IF
-        END DO
-     END IF
-  END DO
+           else
+              u(1,k) = -r*sin(theta)
+              u(2,k) = r*cos(theta)
+           end if
+        end do
+     end if
+  end do
 
  
-  CALL vars_params(h,gam,rho0,p0,grav)
-  CALL kernel_select(kernelname)
-  CALL grid_create(xmin,xmax,kernel_support(h),periodic)
+  call vars_params(h,gam,rho0,p0,grav)
+  call kernel_select(kernelname)
+  call grid_create(xmin,xmax,kernel_support(h),periodic)
   m = 1.0_dp
-  CALL vars_density
-  r = SUM(rho)/np ! average density for m = 1
+  call vars_density
+  r = sum(rho)/np ! average density for m = 1
   m = rho0/r      ! average density = rho0
   rho = rho/r     ! density equation is linear
-  CALL vars_pressure
+  call vars_pressure
   mu = mu0
 
-  WRITE(filnam,'(4A,I3.3)')TRIM(dir),TRIM(job),'/',TRIM(job),0
-  CALL vars_write(TRIM(filnam))
-  CALL grid_destroy
-  CALL vars_destroy
+  write(filnam,'(4a,i3.3)')trim(dir),trim(job),'/',trim(job),0
+  call vars_write(trim(filnam))
+  call grid_destroy
+  call vars_destroy
   
   
-END PROGRAM grid2d
+end program grid2d
