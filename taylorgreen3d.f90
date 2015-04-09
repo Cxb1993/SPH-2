@@ -1,4 +1,4 @@
-program taylorgreen2d
+program taylorgreen3d
 
   use types
   use vars, only : vars_create, vars_destroy, vars_write, vars_params, vars_density, vars_pressure
@@ -7,27 +7,27 @@ program taylorgreen2d
   use kernels, only : kernel_select, kernel_support
   implicit none
   
-  integer(i4b), parameter                  :: ndim = 2
-  integer(i4b), dimension(ndim), parameter :: n = (/ 32, 32 /)
-  real(dp), dimension(ndim), parameter     :: xmin = (/ 0.0_dp, 0.0_dp /)
-  real(dp), dimension(ndim), parameter     :: xmax = (/ 2.0_dp*pi, 2.0_dp*pi /)
-  real(dp), dimension(ndim), parameter     :: grav = (/ 0.0_dp, 0.0_dp /) 
-  integer(i4b), dimension(ndim), parameter :: periodic = (/ 1, 1 /)
-  real(dp), parameter                      :: h = 1.2_dp*2.0_dp*pi/32.0_dp
+  integer(i4b), parameter                  :: ndim = 3
+  integer(i4b), dimension(ndim), parameter :: n = (/ 64, 64, 64 /)
+  real(dp), dimension(ndim), parameter     :: xmin = (/ 0.0_dp, 0.0_dp, 0.0_dp /)
+  real(dp), dimension(ndim), parameter     :: xmax = (/ 2.0_dp*pi, 2.0_dp*pi, 2.0_dp*pi /)
+  real(dp), dimension(ndim), parameter     :: grav = (/ 0.0_dp, 0.0_dp, 0.0_dp /) 
+  integer(i4b), dimension(ndim), parameter :: periodic = (/ 1, 1, 1 /)
+  real(dp), parameter                      :: h = 1.2_dp*2.0_dp*pi/64.0_dp
   real(dp), parameter                      :: rho0 = 1.0_dp
   real(dp), parameter                      :: gam = 7.0_dp
   real(dp), parameter                      :: mu0 = 0.01d0
   real(dp), parameter                      :: cs = 10.0_dp, p0 = rho0*cs**2/gam
   character(len=80)                        :: kernelname = 'm4'
   character(len=80)                        :: dir = '/mnt/disk2/tmattner/SPH/'
-  character(len=80)                        :: job = 'taylorgreen2d'
-  integer(i4b)                             :: nsteps = 100
+  character(len=80)                        :: job = 'taylorgreen3d'
+  integer(i4b)                             :: nsteps=100
+ 
+   character(len=120) :: filnam
+  integer(i4b)        :: i, j, k, kk, np
+  real(dp)            :: dx(ndim), dt, r, x0, x1
   
-  character(len=120) :: filnam
-  integer(i4b)       :: i, j, k, np
-  real(dp)           :: dx(ndim), dt, r, x0, x1
-  
-  np = n(1)*n(2)
+  np = n(1)*n(2)*n(3)
   dx = (xmax - xmin)/n
   dt = min(0.1_dp*minval(dx)/cs, 0.1_dp*minval(dx)**2*rho0/mu0)
 
@@ -54,19 +54,23 @@ program taylorgreen2d
   write(filnam, '(3a,i3.3)') 'mkdir ', trim(dir), trim(job)
   call system(trim(filnam))
  
-  call vars_create(ndim, np)
+  call vars_create(ndim,np)
 
   u = 0.0_dp
   bc = 0
-  do j=1,n(2)
-     do i=1,n(1)
-        k = (j-1)*n(2) + i
-        x(1,k) = dx(1)*(i-1) + 0.5_dp*dx(1) + 0.25_dp*dx(1)*(1.d0 - cos(pi*j))
-        x(2,k) = dx(2)*(j-1) + 0.5_dp*dx(2)
-        u(1,k) = sin(x(1,k))*cos(x(2,k))
-        u(2,k) = -cos(x(1,k))*sin(x(2,k))
+  do k=1,n(3)
+     do j=1,n(2)
+        do i=1,n(1)
+           kk = (k-1)*n(1)*n(2) + (j-1)*n(1) + i
+           x(1,kk) = dx(1)*(i-1) + 0.5_dp*dx(1)  
+           x(2,kk) = dx(2)*(j-1) + 0.5_dp*dx(2)
+           x(3,kk) = dx(3)*(k-1) + 0.5_dp*dx(3)
+           u(1,kk) = sin(x(1,kk))*cos(x(2,kk))
+           u(2,kk) = -cos(x(1,kk))*sin(x(2,kk))
+           u(3,kk) = 0.0_dp
+        end do
      end do
-  end do 
+  end do
 
   call vars_params(h, gam, rho0, p0, grav)
   call kernel_select(kernelname)
@@ -84,5 +88,4 @@ program taylorgreen2d
   call grid_destroy
   call vars_destroy
   
-  
-end program taylorgreen2d
+end program taylorgreen3d
