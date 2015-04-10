@@ -13,7 +13,7 @@ OBJS = types.o vectors.o kernels.o grid.o mesh.o vars.o
 # Conditionals
 
 FF = gfortran
-FCOMPILEFLAGS = -Ofast -fopenmp #-floop-parallelize-all -ftree-parallelize-loops=4
+FCOMPILEFLAGS = -O3 -fopenmp #-floop-parallelize-all -ftree-parallelize-loops=4
 LD = $(FF)
 LINKFLAGS = $(FCOMPILEFLAGS)
 LIBS = tecio64.a -lstdc++
